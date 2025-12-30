@@ -1,3 +1,4 @@
+import os
 from fastmcp import FastMCP
 
 # Initialize the MCP server
@@ -16,6 +17,16 @@ def query(prompt: str) -> str:
     """
     return "viincci_rag"
 
+@mcp.custom_route("/health", methods=["GET"])
+async def health_check(request):
+    """Health check endpoint for monitoring"""
+    from starlette.responses import JSONResponse
+    return JSONResponse({"status": "healthy", "service": "viincci_rag_server"})
+
 if __name__ == "__main__":
-    # Run the server using HTTP transport for web deployment
-    mcp.run(transport="http", host="0.0.0.0", port=8000)
+    # Get port from environment variable (for Render) or default to 8000
+    port = int(os.environ.get("PORT", 8000))
+    
+    # Use SSE transport for better client compatibility
+    # SSE (Server-Sent Events) is the transport expected by many MCP clients
+    mcp.run(transport="sse", host="0.0.0.0", port=port)
